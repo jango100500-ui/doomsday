@@ -90,7 +90,7 @@ $("#modalNext").onclick=()=>{if(selected<movies.length-1)openMovie(selected+1)};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if($("#modal").classList.contains('open')){if(e.key==='ArrowLeft'&&selected>0)openMovie(selected-1);if(e.key==='ArrowRight'&&selected<movies.length-1)openMovie(selected+1)}});
 $("#resetBtn").onclick=()=>{if(confirm('Reset all watched films on this device?')){watched=[];save();render();toast('Progress reset')}};
 render();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=2', {updateViaCache:'none'}).catch(()=>{}));
 </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
   "name": "MCU — Your path to Doomsday",
   "short_name": "MCU",
   "description": "A native-feeling offline-first MCU watch tracker.",
-  "start_url": "./",
+  "start_url": "./index.html?v=2",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
