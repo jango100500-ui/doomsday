@@ -1,95 +1,750 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="MCU" />
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
-  <title>MCU Tracker</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="css/style.css" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="MCU"/>
+<title>MCU Tracker</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=MCU&size=192&background=000000&color=ffffff&bold=true&font-size=0.4"/>
+<style>
+/* ── RESET ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overscroll-behavior:none}
+
+/* ── TOKENS ── */
+:root{
+  --bg:#f5f5f7;--surface:#fff;--surface2:#f0f0f2;--border:#e2e2e2;
+  --text:#1a1a1a;--text2:#6e6e73;--accent:#1a1a1a;--accent-fg:#fff;
+  --line:#d0d0d0;--panel:#fff;--radius:16px;
+  --hh:54px;--sb:82px;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+  color-scheme:light;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:#3a3a3c;
+    --text:#f5f5f7;--text2:#8e8e93;--accent:#f5f5f7;--accent-fg:#111;
+    --line:#3a3a3c;--panel:#1c1c1e;
+    color-scheme:dark;
+  }
+}
+[data-theme=light]{
+  --bg:#f5f5f7;--surface:#fff;--surface2:#f0f0f2;--border:#e2e2e2;
+  --text:#1a1a1a;--text2:#6e6e73;--accent:#1a1a1a;--accent-fg:#fff;
+  --line:#d0d0d0;--panel:#fff;color-scheme:light;
+}
+[data-theme=dark]{
+  --bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:#3a3a3c;
+  --text:#f5f5f7;--text2:#8e8e93;--accent:#f5f5f7;--accent-fg:#111;
+  --line:#3a3a3c;--panel:#1c1c1e;color-scheme:dark;
+}
+
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  height:100dvh;
+  overflow:hidden;
+}
+
+/* ── HEADER ── */
+#hdr{
+  height:var(--hh);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  position:relative;z-index:20;
+  padding-top:env(safe-area-inset-top);
+}
+.logo{font-size:17px;font-weight:800;letter-spacing:.05em}
+.hdr-r{display:flex;gap:8px}
+.ico-btn{
+  width:34px;height:34px;border-radius:50%;border:none;
+  background:var(--surface2);color:var(--text);
+  font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .15s;-webkit-tap-highlight-color:transparent;
+}
+.ico-btn:active{transform:scale(.88)}
+
+/* ── SAGA BAR ── */
+#saga{
+  padding:12px 18px 10px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.saga-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;margin-bottom:3px}
+.saga-row{display:flex;align-items:center;gap:14px}
+.saga-ttl{font-size:21px;font-weight:700;white-space:nowrap}
+.prog-wrap{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+#prog-txt{font-size:13px;color:var(--text2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.prog-track{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;max-width:180px}
+.prog-fill{height:100%;background:var(--text);border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1);width:0}
+#next-wrap{margin-top:5px;font-size:12px;color:var(--text2);display:flex;gap:5px;align-items:baseline;flex-wrap:wrap}
+.next-lbl{font-weight:600;flex-shrink:0}
+#next-ttl{color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── TIMELINE SCROLL ── */
+#tl-wrap{
+  flex:1;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:28px 16px 60px;
+}
+#tl{display:flex;flex-direction:column}
+
+/* ── ROW ── */
+.tl-row{
+  display:flex;
+  align-items:flex-start;
+  position:relative;
+  margin-bottom:0;
+}
+/* horizontal line through the row */
+.tl-row::before{
+  content:'';position:absolute;
+  top:19px;left:20px;right:20px;
+  height:2px;background:var(--line);z-index:0;
+}
+
+/* ── U-CONNECTOR between rows ── */
+.tl-conn{
+  height:32px;
+  position:relative;
+  margin:0 20px;
+}
+/* right side vertical drop */
+.tl-conn.right::after{
+  content:'';position:absolute;
+  right:0;top:0;
+  width:2px;height:100%;
+  background:var(--line);
+}
+/* left side vertical drop */
+.tl-conn.left::after{
+  content:'';position:absolute;
+  left:0;top:0;
+  width:2px;height:100%;
+  background:var(--line);
+}
+
+/* ── ITEM ── */
+.tl-item{
+  display:flex;flex-direction:column;align-items:center;
+  flex:1;min-width:0;
+  cursor:pointer;position:relative;z-index:1;
+  padding:0 1px;
+  -webkit-tap-highlight-color:transparent;
+  transition:opacity .15s;
+}
+.tl-item:active{opacity:.6}
+
+/* ── NODE ── */
+.tl-node{
+  width:38px;height:38px;border-radius:50%;
+  border:2px solid var(--border);
+  background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--text);
+  transition:all .25s cubic-bezier(.34,1.56,.64,1);
+  flex-shrink:0;position:relative;
+  user-select:none;
+}
+.tl-node.watched{
+  background:var(--accent);border-color:var(--accent);color:var(--accent-fg);
+}
+.tl-node.watched .nnum{display:none}
+.tl-node.watched::after{content:'✓';font-size:14px;font-weight:800}
+.tl-node.current{
+  background:var(--accent);border-color:var(--accent);color:var(--accent-fg);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent);
+}
+/* rating dot */
+.tl-node .rdot{
+  position:absolute;bottom:-3px;right:-3px;
+  width:12px;height:12px;border-radius:50%;
+  background:#f5a623;border:2px solid var(--bg);
+  font-size:7px;color:#fff;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  display:none;
+}
+.tl-node.rated .rdot{display:flex}
+
+.tl-lbl{margin-top:7px;text-align:center;max-width:68px}
+.tl-name{
+  font-size:9.5px;font-weight:500;color:var(--text);line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.tl-year{font-size:9px;color:var(--text2);margin-top:2px}
+
+/* ── OVERLAY & PANEL ── */
+#overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  z-index:100;opacity:0;pointer-events:none;
+  transition:opacity .3s;
+}
+#overlay.show{opacity:1;pointer-events:all}
+
+#panel{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--panel);
+  border-radius:22px 22px 0 0;
+  z-index:101;
+  max-height:90dvh;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:0 20px calc(28px + env(safe-area-inset-bottom));
+  transform:translateY(105%);
+  transition:transform .38s cubic-bezier(.4,0,.2,1);
+  will-change:transform;
+}
+#panel.show{transform:translateY(0)}
+
+/* drag handle */
+#panel::before{
+  content:'';display:block;
+  width:36px;height:4px;
+  background:var(--border);border-radius:2px;
+  margin:12px auto 16px;
+}
+
+#p-close{
+  position:absolute;top:16px;right:18px;
+  width:28px;height:28px;border-radius:50%;
+  border:none;background:var(--surface2);
+  color:var(--text2);font-size:13px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+#p-num{font-size:12px;color:var(--text2);font-weight:700;margin-bottom:3px}
+#p-title{font-size:24px;font-weight:800;line-height:1.2;margin-bottom:5px;padding-right:36px}
+#p-meta{font-size:13px;color:var(--text2);margin-bottom:14px}
+#p-poster{
+  width:100%;aspect-ratio:2/3;object-fit:cover;
+  border-radius:14px;background:var(--surface2);
+  margin-bottom:14px;display:block;
+}
+.p-sec{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin:16px 0 8px}
+
+/* buttons */
+.btn-main{
+  width:100%;padding:15px;border:none;border-radius:14px;
+  background:var(--accent);color:var(--accent-fg);
+  font-size:15px;font-weight:700;cursor:pointer;
+  font-family:var(--font);transition:transform .15s,opacity .15s;
+  margin-bottom:10px;
+}
+.btn-main:active{transform:scale(.97);opacity:.85}
+.btn-main.off{background:var(--surface2);color:var(--text)}
+.btn-sec{
+  padding:10px 16px;border:none;border-radius:10px;
+  background:var(--surface2);color:var(--text);
+  font-size:14px;font-weight:600;cursor:pointer;
+  font-family:var(--font);transition:transform .15s;
+  margin-top:8px;
+}
+.btn-sec:active{transform:scale(.95)}
+
+/* stars */
+#stars{display:flex;gap:8px}
+.star{
+  font-size:30px;cursor:pointer;color:var(--border);
+  transition:transform .15s,color .15s;line-height:1;
+  -webkit-tap-highlight-color:transparent;
+}
+.star.on{color:#f5a623}
+.star:active{transform:scale(1.35)}
+
+/* notes */
+#notes-ta{
+  width:100%;padding:12px;
+  background:var(--surface2);
+  border:1.5px solid transparent;
+  border-radius:12px;color:var(--text);
+  font-size:14px;font-family:var(--font);
+  resize:none;outline:none;
+  transition:border-color .2s;
+  min-height:80px;
+}
+#notes-ta:focus{border-color:var(--text)}
+
+/* watch date */
+#p-date{font-size:13px;color:var(--text2);margin-top:4px}
+
+/* ── LANG PICKER ── */
+#lang-picker{
+  position:fixed;top:calc(var(--hh) + 6px);right:14px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:6px;z-index:300;
+  box-shadow:0 12px 40px rgba(0,0,0,.18);
+  flex-direction:column;gap:2px;
+  display:none;
+}
+#lang-picker.show{display:flex}
+#lang-picker button{
+  padding:10px 18px;border:none;background:none;
+  color:var(--text);font-size:14px;font-family:var(--font);
+  text-align:left;cursor:pointer;border-radius:10px;
+  transition:background .12s;white-space:nowrap;
+}
+#lang-picker button:hover{background:var(--surface2)}
+
+/* ── LANDSCAPE ── */
+@media(orientation:landscape){
+  body{flex-direction:column}
+
+  #hdr{height:48px;--hh:48px}
+
+  #saga{
+    display:flex;flex-direction:row;
+    align-items:center;gap:20px;
+    padding:8px 18px;
+  }
+  .saga-lbl{display:none}
+  .saga-ttl{font-size:17px}
+  #next-wrap{margin-top:0;font-size:11px}
+  .prog-track{max-width:120px}
+
+  #panel{
+    top:48px;right:0;bottom:0;left:auto;
+    width:min(360px,48vw);
+    border-radius:20px 0 0 20px;
+    max-height:none;
+    transform:translateX(110%);
+    padding-bottom:20px;
+  }
+  #panel.show{transform:translateX(0)}
+  #panel::before{display:none}
+}
+
+@media(orientation:landscape)and(max-height:480px){
+  #saga{padding:5px 14px}
+  .saga-ttl{font-size:15px}
+  #prog-txt{font-size:12px}
+  #panel{width:min(320px,44vw)}
+}
+
+/* ── ANIMATIONS ── */
+@keyframes pop{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.35)}
+  70%{transform:scale(.9)}
+  100%{transform:scale(1)}
+}
+.popping{animation:pop .38s cubic-bezier(.34,1.56,.64,1) forwards}
+
+/* scrollbar */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+::-webkit-scrollbar-track{background:transparent}
+</style>
 </head>
 <body>
-  <div id="app">
 
-    <!-- HEADER -->
-    <header id="main-header">
-      <span class="logo">MCU</span>
-      <div class="header-right">
-        <button id="lang-btn" class="icon-btn" aria-label="Language"></button>
-        <button id="theme-btn" class="icon-btn" aria-label="Toggle theme"></button>
-      </div>
-    </header>
-
-    <!-- SAGA INFO BAR -->
-    <div id="saga-bar">
-      <div class="saga-label" data-i18n="saga">SAGA</div>
-      <div class="saga-row">
-        <h1 class="saga-title">MCU</h1>
-        <div class="saga-progress-wrap">
-          <span id="progress-text">0 / 38</span>
-          <div class="progress-track">
-            <div class="progress-fill" id="progress-fill"></div>
-          </div>
-        </div>
-      </div>
-      <!-- Next to watch -->
-      <div id="next-wrap">
-        <span class="next-label" data-i18n="next_up">Next up:</span>
-        <span id="next-title">—</span>
-      </div>
-    </div>
-
-    <!-- TIMELINE -->
-    <main id="timeline-container">
-      <div id="timeline"></div>
-    </main>
-
-    <!-- DETAIL PANEL -->
-    <div id="panel-overlay" class="hidden"></div>
-    <aside id="detail-panel" class="hidden">
-      <button id="panel-close">✕</button>
-      <div id="panel-num"></div>
-      <h2 id="panel-title"></h2>
-      <div id="panel-meta"></div>
-      <img id="panel-poster" src="" alt="" />
-
-      <button id="btn-watched" class="btn-primary">
-        <span id="btn-watched-text"></span>
-      </button>
-
-      <!-- Rating -->
-      <div id="rating-wrap">
-        <div class="section-label" data-i18n="your_rating">Your Rating</div>
-        <div id="stars"></div>
-      </div>
-
-      <!-- Notes -->
-      <div id="notes-wrap">
-        <div class="section-label" data-i18n="notes">Notes</div>
-        <textarea id="notes-input" rows="3" data-i18n-placeholder="write_note"></textarea>
-        <button id="btn-save-note" class="btn-secondary" data-i18n="save">Save</button>
-      </div>
-
-      <!-- Watch date -->
-      <div id="date-wrap" class="hidden">
-        <div class="section-label" data-i18n="watched_on">Watched on</div>
-        <div id="watch-date-display"></div>
-      </div>
-    </aside>
-
-    <!-- LANG PICKER -->
-    <div id="lang-picker" class="hidden">
-      <button data-lang="en">🇬🇧 English</button>
-      <button data-lang="de">🇩🇪 Deutsch</button>
-      <button data-lang="ru">🇷🇺 Русский</button>
-    </div>
-
+<!-- HEADER -->
+<header id="hdr">
+  <span class="logo">MCU</span>
+  <div class="hdr-r">
+    <button class="ico-btn" id="lang-btn" aria-label="Language">🌐</button>
+    <button class="ico-btn" id="theme-btn" aria-label="Theme">🌙</button>
   </div>
-  <script src="js/app.js"></script>
+</header>
+
+<!-- LANG PICKER -->
+<div id="lang-picker">
+  <button data-lang="en">🇬🇧 English</button>
+  <button data-lang="de">🇩🇪 Deutsch</button>
+  <button data-lang="ru">🇷🇺 Русский</button>
+</div>
+
+<!-- SAGA BAR -->
+<div id="saga">
+  <div>
+    <div class="saga-lbl" id="lbl-saga">SAGA</div>
+    <div class="saga-row">
+      <span class="saga-ttl">MCU</span>
+      <div class="prog-wrap">
+        <span id="prog-txt">0 / 38</span>
+        <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+      </div>
+    </div>
+  </div>
+  <div id="next-wrap">
+    <span class="next-lbl" id="lbl-next">Next up:</span>
+    <span id="next-ttl">Iron Man</span>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div id="tl-wrap"><div id="tl"></div></div>
+
+<!-- OVERLAY -->
+<div id="overlay"></div>
+
+<!-- DETAIL PANEL -->
+<div id="panel">
+  <button id="p-close">✕</button>
+  <div id="p-num"></div>
+  <h2 id="p-title"></h2>
+  <div id="p-meta"></div>
+  <img id="p-poster" src="" alt="" loading="lazy"/>
+  <button class="btn-main" id="btn-watch"></button>
+  <div class="p-sec" id="lbl-rating">Your Rating</div>
+  <div id="stars"></div>
+  <div class="p-sec" id="lbl-notes">Notes</div>
+  <textarea id="notes-ta" rows="3"></textarea>
+  <button class="btn-sec" id="btn-save">Save</button>
+  <div id="date-wrap" style="display:none">
+    <div class="p-sec" id="lbl-date">Watched on</div>
+    <div id="p-date"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════ DATA ═══════════ */
+const FILMS = [
+  {id:1, title:"Iron Man",                                      year:2008, rt:"2h 6m",  poster:"https://image.tmdb.org/t/p/w500/78lPtwv72eTNqFW9COBP8i1t0PY.jpg"},
+  {id:2, title:"The Incredible Hulk",                           year:2008, rt:"1h 52m", poster:"https://image.tmdb.org/t/p/w500/gKzYx79y0AQTL4UAk1cBQJ3nvrm.jpg"},
+  {id:3, title:"Iron Man 2",                                    year:2010, rt:"2h 4m",  poster:"https://image.tmdb.org/t/p/w500/6WBeq4tQ8L0L8oyR3gEMOHbTuaR.jpg"},
+  {id:4, title:"Thor",                                          year:2011, rt:"1h 55m", poster:"https://image.tmdb.org/t/p/w500/prSfAi1xXrhoom3538CRncZIXsX.jpg"},
+  {id:5, title:"Captain America: The First Avenger",            year:2011, rt:"2h 4m",  poster:"https://image.tmdb.org/t/p/w500/vSNxB3B7uRnSdSPvqFNLqOmzjSl.jpg"},
+  {id:6, title:"The Avengers",                                  year:2012, rt:"2h 23m", poster:"https://image.tmdb.org/t/p/w500/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg"},
+  {id:7, title:"Iron Man 3",                                    year:2013, rt:"2h 10m", poster:"https://image.tmdb.org/t/p/w500/qhPtAc1TKbMPqNvcdXSOn9Bn7hZ.jpg"},
+  {id:8, title:"Thor: The Dark World",                          year:2013, rt:"1h 52m", poster:"https://image.tmdb.org/t/p/w500/bnX5PpBFRBxhJhRInGRoVbQlBHL.jpg"},
+  {id:9, title:"Captain America: The Winter Soldier",           year:2014, rt:"2h 16m", poster:"https://image.tmdb.org/t/p/w500/5TQ6YDmymBpnF005OyoB7ohZps9.jpg"},
+  {id:10,title:"Guardians of the Galaxy",                       year:2014, rt:"2h 1m",  poster:"https://image.tmdb.org/t/p/w500/r7vmZjiyZw9rpJMQJdXpjgiCOk9.jpg"},
+  {id:11,title:"Avengers: Age of Ultron",                       year:2015, rt:"2h 21m", poster:"https://image.tmdb.org/t/p/w500/4ssDuvEDkSArWEdyBl2X5EHvYKU.jpg"},
+  {id:12,title:"Ant-Man",                                       year:2015, rt:"1h 57m", poster:"https://image.tmdb.org/t/p/w500/MgBQCQKGNjDqSoNJMXhTOZKoQG.jpg"},
+  {id:13,title:"Captain America: Civil War",                    year:2016, rt:"2h 27m", poster:"https://image.tmdb.org/t/p/w500/rAGiXaUfPzY7CDd3MKvOvJ4FbYA.jpg"},
+  {id:14,title:"Doctor Strange",                                year:2016, rt:"1h 55m", poster:"https://image.tmdb.org/t/p/w500/uGnMhsSBNPCJDt58IUFnm8SXPyL.jpg"},
+  {id:15,title:"Guardians of the Galaxy Vol. 2",                year:2017, rt:"2h 16m", poster:"https://image.tmdb.org/t/p/w500/y4MBh0EjBlMuOzv9axM4B61I8bA.jpg"},
+  {id:16,title:"Spider-Man: Homecoming",                        year:2017, rt:"2h 13m", poster:"https://image.tmdb.org/t/p/w500/c24sv2weTHPsmDa7jEMN0m2P3RT.jpg"},
+  {id:17,title:"Thor: Ragnarok",                                year:2017, rt:"2h 10m", poster:"https://image.tmdb.org/t/p/w500/rzRwTcFvttcN1ZpX2xv4j3tSdJu.jpg"},
+  {id:18,title:"Black Panther",                                 year:2018, rt:"2h 14m", poster:"https://image.tmdb.org/t/p/w500/uxzzxijgPIY7slzFvMotPv8wjKA.jpg"},
+  {id:19,title:"Avengers: Infinity War",                        year:2018, rt:"2h 29m", poster:"https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg"},
+  {id:20,title:"Ant-Man and the Wasp",                          year:2018, rt:"1h 58m", poster:"https://image.tmdb.org/t/p/w500/SZ4TMcwsGuGzgijKHyFtDGgioS.jpg"},
+  {id:21,title:"Captain Marvel",                                year:2019, rt:"2h 4m",  poster:"https://image.tmdb.org/t/p/w500/AtsgWhDnHTq68L0lLsUrCnM7TjG.jpg"},
+  {id:22,title:"Avengers: Endgame",                             year:2019, rt:"3h 1m",  poster:"https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg"},
+  {id:23,title:"Spider-Man: Far From Home",                     year:2019, rt:"2h 9m",  poster:"https://image.tmdb.org/t/p/w500/rjbNpRMoVvqHmhmksbokcyHFoeZ.jpg"},
+  {id:24,title:"Black Widow",                                   year:2021, rt:"2h 14m", poster:"https://image.tmdb.org/t/p/w500/qAZ0pzat24kLdO3o8ejmbLxyOac.jpg"},
+  {id:25,title:"Shang-Chi and the Legend of the Ten Rings",     year:2021, rt:"2h 12m", poster:"https://image.tmdb.org/t/p/w500/1BIoJGKbXjdFDAqUEiA2VHqkK1Z.jpg"},
+  {id:26,title:"Eternals",                                      year:2021, rt:"2h 37m", poster:"https://image.tmdb.org/t/p/w500/6AdXwFQBoKfMQrCXKe2MhEELECe.jpg"},
+  {id:27,title:"Spider-Man: No Way Home",                       year:2021, rt:"2h 28m", poster:"https://image.tmdb.org/t/p/w500/uJYYizSuA9Y3DCs0qS4qWvHfZg4.jpg"},
+  {id:28,title:"Doctor Strange in the Multiverse of Madness",   year:2022, rt:"2h 6m",  poster:"https://image.tmdb.org/t/p/w500/9Gtg2DzBhmYamXBS1hKAhiwbBKS.jpg"},
+  {id:29,title:"Thor: Love and Thunder",                        year:2022, rt:"1h 59m", poster:"https://image.tmdb.org/t/p/w500/pIkRyD18kl4FhoCNQuWxWu5cBLM.jpg"},
+  {id:30,title:"Black Panther: Wakanda Forever",                year:2022, rt:"2h 41m", poster:"https://image.tmdb.org/t/p/w500/sv1xJUazXeYqALzczSZ3O6nkH75.jpg"},
+  {id:31,title:"Ant-Man and the Wasp: Quantumania",             year:2023, rt:"2h 5m",  poster:"https://image.tmdb.org/t/p/w500/qnqGbB22YJ7dSs4o6M7exTpNxPz.jpg"},
+  {id:32,title:"Guardians of the Galaxy Vol. 3",                year:2023, rt:"2h 30m", poster:"https://image.tmdb.org/t/p/w500/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg"},
+  {id:33,title:"The Marvels",                                   year:2023, rt:"1h 45m", poster:"https://image.tmdb.org/t/p/w500/9GBhzXMFjgcZ3FdR9w3bqMMRmPs.jpg"},
+  {id:34,title:"Deadpool & Wolverine",                          year:2024, rt:"2h 7m",  poster:"https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg"},
+  {id:35,title:"Captain America: Brave New World",              year:2025, rt:"1h 58m", poster:"https://image.tmdb.org/t/p/w500/pzIddUEMWhWzfvLI3TwxUG2wGoi.jpg"},
+  {id:36,title:"Thunderbolts*",                                 year:2025, rt:"2h 7m",  poster:"https://image.tmdb.org/t/p/w500/m9EtP1Yrzv6v7dMaC9mTfXpMJfd.jpg"},
+  {id:37,title:"The Fantastic Four: First Steps",               year:2025, rt:"TBA",    poster:"https://image.tmdb.org/t/p/w500/9HWRmBFAMLFNVRf4AlHxpSp5fEb.jpg"},
+  {id:38,title:"Avengers: Doomsday",                            year:2026, rt:"TBA",    poster:"https://image.tmdb.org/t/p/w500/placeholder.jpg"},
+];
+
+/* ═══════════ i18n ═══════════ */
+const TR = {
+  en:{saga:"SAGA",next:"Next up:",rating:"Your Rating",notes:"Notes",
+      save:"Save",date:"Watched on",mark:"✓  Mark as watched",
+      unmark:"✕  Remove from watched",note_ph:"Write a note…",
+      of:"of",all_done:"🎉 All watched!"},
+  de:{saga:"SAGA",next:"Als Nächstes:",rating:"Deine Bewertung",notes:"Notizen",
+      save:"Speichern",date:"Gesehen am",mark:"✓  Als gesehen markieren",
+      unmark:"✕  Markierung entfernen",note_ph:"Notiz schreiben…",
+      of:"von",all_done:"🎉 Alle gesehen!"},
+  ru:{saga:"САГА",next:"Следующий:",rating:"Ваша оценка",notes:"Заметки",
+      save:"Сохранить",date:"Просмотрено",mark:"✓  Отметить просмотренным",
+      unmark:"✕  Убрать отметку",note_ph:"Написать заметку…",
+      of:"из",all_done:"🎉 Все просмотрено!"},
+};
+
+/* ═══════════ STATE ═══════════ */
+let S = {theme:'auto', lang:'en', watched:{}};
+let activeId = null;
+
+function load(){
+  try{ const r=localStorage.getItem('mcu2'); if(r) S={...S,...JSON.parse(r)}; }catch(e){}
+}
+function save(){ localStorage.setItem('mcu2', JSON.stringify(S)); }
+function t(k){ return (TR[S.lang]||TR.en)[k]||k; }
+
+/* ═══════════ THEME ═══════════ */
+function applyTheme(){
+  const root = document.documentElement;
+  const isDark = S.theme==='dark' || (S.theme==='auto' && matchMedia('(prefers-color-scheme:dark)').matches);
+  if(S.theme==='auto') root.removeAttribute('data-theme');
+  else root.setAttribute('data-theme', S.theme);
+  document.getElementById('theme-btn').textContent = isDark ? '☀️' : '🌙';
+}
+function cycleTheme(){
+  const o=['auto','dark','light'];
+  S.theme = o[(o.indexOf(S.theme)+1)%3];
+  save(); applyTheme();
+}
+
+/* ═══════════ PROGRESS ═══════════ */
+function watchedCount(){ return Object.keys(S.watched).length; }
+
+function updateBar(){
+  const c = watchedCount(), total = FILMS.length;
+  document.getElementById('prog-txt').textContent = `${c} ${t('of')} ${total}`;
+  document.getElementById('prog-fill').style.width = `${(c/total)*100}%`;
+  const next = FILMS.find(f=>!S.watched[f.id]);
+  document.getElementById('next-ttl').textContent = next ? `${next.id}. ${next.title}` : t('all_done');
+  document.getElementById('lbl-next').textContent = t('next');
+  document.getElementById('lbl-saga').textContent = t('saga');
+}
+
+/* ═══════════ TIMELINE ═══════════ */
+const PER_ROW = 7;
+
+function buildTimeline(){
+  const tl = document.getElementById('tl');
+  tl.innerHTML = '';
+  const rows = [];
+  for(let i=0;i<FILMS.length;i+=PER_ROW) rows.push(FILMS.slice(i,i+PER_ROW));
+
+  rows.forEach((row, ri)=>{
+    const reversed = ri%2===1;
+    const display = reversed ? [...row].reverse() : row;
+
+    const rowEl = document.createElement('div');
+    rowEl.className = 'tl-row';
+    rowEl.id = `row-${ri}`;
+
+    display.forEach(film=>{
+      const w = S.watched[film.id];
+      const isW = !!w;
+      const nextFilm = FILMS.find(f=>!S.watched[f.id]);
+      const isCur = nextFilm && nextFilm.id === film.id;
+      const rating = w?.rating || 0;
+
+      const item = document.createElement('div');
+      item.className = 'tl-item';
+      item.dataset.id = film.id;
+
+      const nodeClass = isW ? 'watched' : isCur ? 'current' : '';
+      const ratedClass = rating > 0 ? 'rated' : '';
+
+      item.innerHTML = `
+        <div class="tl-node ${nodeClass} ${ratedClass}">
+          <span class="nnum">${film.id}</span>
+          <span class="rdot">${rating}</span>
+        </div>
+        <div class="tl-lbl">
+          <div class="tl-name">${film.title}</div>
+          <div class="tl-year">${film.year}</div>
+        </div>`;
+
+      item.addEventListener('click', ()=> openPanel(film.id));
+      rowEl.appendChild(item);
+    });
+
+    tl.appendChild(rowEl);
+
+    // U-connector
+    if(ri < rows.length-1){
+      const conn = document.createElement('div');
+      // even rows: connector on the right, odd: on the left
+      conn.className = `tl-conn ${ri%2===0 ? 'right' : 'left'}`;
+      tl.appendChild(conn);
+    }
+  });
+}
+
+function refreshNode(id){
+  const item = document.querySelector(`.tl-item[data-id="${id}"]`);
+  if(!item) return;
+  const node = item.querySelector('.tl-node');
+  const rdot = item.querySelector('.rdot');
+  const w = S.watched[id];
+  const isW = !!w;
+  const nextFilm = FILMS.find(f=>!S.watched[f.id]);
+  const isCur = nextFilm && nextFilm.id === parseInt(id);
+  const rating = w?.rating || 0;
+
+  node.className = 'tl-node ' + (isW?'watched':isCur?'current':'') + (rating?' rated':'');
+  rdot.textContent = rating;
+  node.classList.add('popping');
+  node.addEventListener('animationend',()=>node.classList.remove('popping'),{once:true});
+}
+
+function refreshAllNodes(){
+  FILMS.forEach(f=>refreshNode(f.id));
+}
+
+/* ═══════════ PANEL ═══════════ */
+function openPanel(id){
+  activeId = id;
+  renderPanel();
+  document.getElementById('panel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closePanel(){
+  document.getElementById('panel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+  activeId = null;
+}
+
+function renderPanel(){
+  const film = FILMS.find(f=>f.id===activeId);
+  const w = S.watched[activeId];
+  const isW = !!w;
+
+  document.getElementById('p-num').textContent = `#${film.id}`;
+  document.getElementById('p-title').textContent = film.title;
+  document.getElementById('p-meta').textContent = `${film.year} · ${film.rt}`;
+
+  const poster = document.getElementById('p-poster');
+  poster.src = film.poster;
+  poster.alt = film.title;
+
+  const btn = document.getElementById('btn-watch');
+  btn.textContent = isW ? t('unmark') : t('mark');
+  btn.className = 'btn-main' + (isW?' off':'');
+
+  renderStars(w?.rating||0);
+
+  document.getElementById('notes-ta').value = w?.note||'';
+  document.getElementById('notes-ta').placeholder = t('note_ph');
+  document.getElementById('btn-save').textContent = t('save');
+
+  document.getElementById('lbl-rating').textContent = t('rating');
+  document.getElementById('lbl-notes').textContent = t('notes');
+
+  const dw = document.getElementById('date-wrap');
+  if(isW && w.date){
+    dw.style.display='block';
+    document.getElementById('lbl-date').textContent = t('date');
+    const d = new Date(w.date);
+    const loc = {en:'en-US',de:'de-DE',ru:'ru-RU'}[S.lang]||'en-US';
+    document.getElementById('p-date').textContent =
+      d.toLocaleDateString(loc,{day:'numeric',month:'long',year:'numeric'});
+  } else {
+    dw.style.display='none';
+  }
+}
+
+function renderStars(r){
+  const c = document.getElementById('stars');
+  c.innerHTML='';
+  for(let i=1;i<=5;i++){
+    const s=document.createElement('span');
+    s.className='star'+(i<=r?' on':'');
+    s.textContent='★';
+    s.addEventListener('click',()=>setStar(i));
+    c.appendChild(s);
+  }
+}
+
+function setStar(r){
+  if(!activeId) return;
+  if(!S.watched[activeId]) toggleWatched(activeId);
+  const cur = S.watched[activeId]?.rating||0;
+  S.watched[activeId]={...S.watched[activeId], rating: cur===r?0:r};
+  save();
+  renderStars(S.watched[activeId].rating);
+  refreshNode(activeId);
+  updateBar();
+}
+
+function toggleWatched(id){
+  if(S.watched[id]){
+    delete S.watched[id];
+  } else {
+    S.watched[id]={date:new Date().toISOString(),rating:0,note:''};
+  }
+  save();
+}
+
+/* ═══════════ EVENTS ═══════════ */
+function bindEvents(){
+  // Theme
+  document.getElementById('theme-btn').addEventListener('click', cycleTheme);
+
+  // Lang
+  const lp = document.getElementById('lang-picker');
+  document.getElementById('lang-btn').addEventListener('click', e=>{
+    e.stopPropagation();
+    lp.classList.toggle('show');
+  });
+  lp.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      S.lang=b.dataset.lang; save();
+      lp.classList.remove('show');
+      updateBar(); if(activeId) renderPanel();
+    });
+  });
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('#lang-picker')&&!e.target.closest('#lang-btn'))
+      lp.classList.remove('show');
+  });
+
+  // Panel
+  document.getElementById('overlay').addEventListener('click', closePanel);
+  document.getElementById('p-close').addEventListener('click', closePanel);
+
+  // Watch toggle
+  document.getElementById('btn-watch').addEventListener('click', ()=>{
+    if(!activeId) return;
+    toggleWatched(activeId);
+    refreshAllNodes();
+    updateBar();
+    renderPanel();
+    if(navigator.vibrate) navigator.vibrate(10);
+  });
+
+  // Save note
+  document.getElementById('btn-save').addEventListener('click', ()=>{
+    if(!activeId) return;
+    const note = document.getElementById('notes-ta').value.trim();
+    if(!S.watched[activeId]) { toggleWatched(activeId); refreshAllNodes(); updateBar(); }
+    S.watched[activeId]={...S.watched[activeId], note};
+    save();
+    const b=document.getElementById('btn-save');
+    const orig=b.textContent; b.textContent='✓';
+    setTimeout(()=>b.textContent=orig, 1200);
+  });
+
+  // Swipe down to close
+  let ty=0;
+  const panel=document.getElementById('panel');
+  panel.addEventListener('touchstart',e=>{ty=e.touches[0].clientY},{passive:true});
+  panel.addEventListener('touchend',e=>{
+    if(e.changedTouches[0].clientY-ty>72) closePanel();
+  },{passive:true});
+
+  // System theme change
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{
+    if(S.theme==='auto') applyTheme();
+  });
+}
+
+/* ═══════════ SW ═══════════ */
+function regSW(){
+  if('serviceWorker' in navigator)
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+/* ═══════════ INIT ═══════════ */
+(function init(){
+  load();
+  applyTheme();
+  buildTimeline();
+  updateBar();
+  bindEvents();
+  regSW();
+})();
+</script>
 </body>
 </html>
