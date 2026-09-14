@@ -1,374 +1,287 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="MCU">
-<meta name="theme-color" content="#ffffff">
-<title>MCU</title>
-<link rel="manifest" href="manifest.json">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f7f7f7;--surface:#fff;--surface-soft:#f2f2f2;--line:#c9c9c9;
-  --border:#dedede;--text:#111;--muted:#737373;--rail:#fff;
-  --black:#111;--white:#fff;--panel:#fff;
-  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
-  color-scheme:light;
-}
-[data-theme="dark"]{
-  --bg:#151617;--surface:#1b1c1d;--surface-soft:#252627;--line:#555;
-  --border:#373839;--text:#f4f4f4;--muted:#a0a0a0;--rail:#18191a;
-  --black:#f4f4f4;--white:#151617;--panel:#1b1c1d;color-scheme:dark;
-}
-html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased}
-body{overflow:hidden}
-button,input,textarea{font:inherit}
-button{color:inherit}
-#app{height:100dvh;display:flex;overflow:hidden}
-.rail{
-  width:78px;flex:0 0 78px;background:var(--rail);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;align-items:center;z-index:20
-}
-.brand{width:100%;height:74px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;letter-spacing:.02em}
-.nav{display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px 0}
-.nav-btn{
-  width:40px;height:40px;border:0;background:transparent;border-radius:11px;display:grid;place-items:center;
-  cursor:pointer;opacity:.72;transition:background .15s,opacity .15s,transform .15s
-}
-.nav-btn:hover{background:var(--surface-soft);opacity:1}.nav-btn:active{transform:scale(.94)}
-.nav-btn.active{opacity:1;background:var(--surface-soft)}
-.nav svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
-.main{min-width:0;flex:1;display:flex;flex-direction:column;overflow:hidden}
-.top{
-  min-height:74px;background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;padding:0 28px;gap:20px
-}
-.saga-meta{display:flex;align-items:flex-end;gap:28px;min-width:0}
-.eyebrow{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
-.saga-title{font-size:20px;font-weight:750;line-height:1}
-.progress{display:flex;align-items:center;gap:12px;padding-bottom:1px}
-.progress span{font-size:12px;font-variant-numeric:tabular-nums;color:var(--text);white-space:nowrap}
-.track{width:150px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
-.fill{height:100%;width:0;background:var(--black);border-radius:2px;transition:width .35s ease}
-.top-actions{display:flex;gap:8px}
-.round-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:10px;background:var(--surface);display:grid;place-items:center;cursor:pointer}
-.round-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
-.content{flex:1;overflow:auto;padding:30px 34px 60px}
-.content-inner{width:min(760px,100%);margin:0 auto}
-.next{
-  display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);margin:0 0 25px 2px
-}
-.next b{font-weight:600;color:var(--text)}
-.timeline{position:relative;padding:5px 0 30px}
-.timeline:before{
-  content:"";position:absolute;top:14px;bottom:25px;left:50%;width:1px;background:var(--line);transform:translateX(-50%)
-}
-.item{position:relative;display:grid;grid-template-columns:1fr 58px 1fr;min-height:102px;align-items:start}
-.node-wrap{grid-column:2;display:flex;justify-content:center;position:relative;z-index:2}
-.node{
-  width:32px;height:32px;border:1px solid #8f8f8f;border-radius:50%;background:var(--surface);
-  display:grid;place-items:center;font-size:10px;font-weight:650;color:var(--text);transition:transform .2s,background .2s,border .2s
-}
-.node.watched,.node.current{background:var(--black);border-color:var(--black);color:var(--white)}
-.node.current{box-shadow:0 0 0 5px color-mix(in srgb,var(--black) 12%,transparent)}
-.node.watched .num{display:none}
-.node.watched:after{content:"✓";font-size:12px}
-.card{padding-top:2px;min-width:0}
-.left .card{text-align:right;padding-right:17px}
-.right .card{text-align:left;padding-left:17px}
-.item.left .card{grid-column:1;grid-row:1}
-.item.right .card{grid-column:3;grid-row:1}
-.item.left .node-wrap,.item.right .node-wrap{grid-column:2;grid-row:1}
-.name{font-size:11px;line-height:1.35;font-weight:600;color:var(--text);max-width:240px}
-.left .name{margin-left:auto}
-.year{font-size:10px;color:var(--muted);margin-top:4px}
-.branch{
-  position:absolute;top:15px;height:1px;background:var(--line);width:calc(50% - 29px);z-index:0
-}
-.item.left .branch{right:calc(50% + 29px)}.item.right .branch{left:calc(50% + 29px)}
-.end{
-  display:flex;justify-content:center;position:relative;z-index:2;margin-top:-4px
-}
-.end .node{border-style:dashed;color:var(--muted)}
-.legend{
-  display:flex;justify-content:center;gap:22px;flex-wrap:wrap;color:var(--muted);font-size:10px;margin-top:4px
-}
-.legend span{display:flex;align-items:center;gap:7px}
-.legend .sample-line{width:28px;height:1px;background:var(--line)}
-.legend .sample-dash{width:28px;border-top:1px dashed var(--line)}
-.legend .sample-node{width:13px;height:13px;border:1px solid #999;border-radius:50%}
-.legend .sample-current{width:13px;height:13px;border-radius:50%;background:var(--black)}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.28);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
-.overlay.show{opacity:1;pointer-events:auto}
-.panel{
-  position:fixed;right:22px;top:50%;transform:translate(30px,-50%);width:min(330px,calc(100vw - 40px));
-  max-height:calc(100dvh - 44px);overflow:auto;background:var(--panel);border:1px solid var(--border);
-  border-radius:16px;padding:16px;z-index:60;opacity:0;pointer-events:none;transition:transform .25s ease,opacity .2s;
-  box-shadow:0 18px 50px rgba(0,0,0,.13)
-}
-.panel.show{opacity:1;pointer-events:auto;transform:translate(0,-50%)}
-.close{position:absolute;right:12px;top:12px;width:28px;height:28px;border:0;border-radius:50%;background:var(--surface-soft);display:grid;place-items:center;cursor:pointer}
-.close svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
-.p-num{display:inline-flex;padding:3px 7px;border-radius:8px;background:var(--surface-soft);font-size:10px;color:var(--muted);margin-bottom:7px}
-.p-title{font-size:18px;line-height:1.22;font-weight:750;padding-right:32px}
-.p-meta{font-size:11px;color:var(--muted);margin:5px 0 13px}
-.poster{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;background:var(--surface-soft);margin-bottom:12px}
-.watch{width:100%;height:38px;border:0;border-radius:9px;background:var(--black);color:var(--white);font-size:12px;font-weight:650;cursor:pointer}
-.watch.off{background:var(--surface-soft);color:var(--text)}
-.sec{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:15px 0 7px}
-.stars{display:flex;gap:3px}.star{border:0;background:transparent;font-size:20px;line-height:1;color:var(--border);cursor:pointer;padding:0 2px}.star.on{color:#111}
-[data-theme="dark"] .star.on{color:#f4f4f4}
-.notes{width:100%;min-height:70px;resize:vertical;border:1px solid var(--border);background:var(--surface-soft);color:var(--text);border-radius:9px;padding:9px;font-size:11px;outline:0}
-.notes:focus{border-color:var(--text)}
-.save{margin-top:7px;border:1px solid var(--border);background:var(--surface);border-radius:8px;padding:8px 13px;font-size:11px;cursor:pointer}
-.date{font-size:11px;color:var(--muted)}
-.lang-menu{
-  position:fixed;right:25px;top:64px;background:var(--surface);border:1px solid var(--border);border-radius:11px;
-  padding:5px;z-index:70;display:none;box-shadow:0 12px 30px rgba(0,0,0,.12)
-}
-.lang-menu.show{display:block}.lang-menu button{display:block;width:130px;border:0;background:transparent;text-align:left;padding:8px;border-radius:7px;font-size:11px;cursor:pointer}.lang-menu button:hover{background:var(--surface-soft)}
-@media(max-width:760px){
-  body{overflow:hidden}
-  #app{display:block}
-  .rail{width:100%;height:58px;border-right:0;border-bottom:1px solid var(--border);display:flex;flex-direction:row;justify-content:space-between;align-items:center;padding:0 12px}
-  .brand{width:auto;height:100%;border:0;padding:0 8px;font-size:15px}
-  .nav{flex-direction:row;padding:0;gap:3px}.nav-btn{width:36px;height:36px}
-  .main{height:calc(100dvh - 58px)}
-  .top{min-height:82px;padding:15px 16px;align-items:center}
-  .saga-meta{gap:18px}.saga-title{font-size:18px}.progress{gap:8px}.track{width:72px}
-  .content{padding:22px 13px 48px}.content-inner{max-width:560px}
-  .next{margin-bottom:20px;padding-left:3px}
-  .timeline:before{top:14px;bottom:22px}
-  .item{grid-template-columns:1fr 48px 1fr;min-height:92px}
-  .node{width:30px;height:30px;font-size:9px}
-  .left .card{padding-right:11px}.right .card{padding-left:11px}
-  .name{font-size:10px;max-width:145px}.year{font-size:9px;margin-top:3px}
-  .branch{width:calc(50% - 24px)}.item.left .branch{right:calc(50% + 24px)}.item.right .branch{left:calc(50% + 24px)}
-  .legend{gap:13px;font-size:9px}
-  .panel{left:10px;right:10px;bottom:10px;top:auto;width:auto;max-height:82dvh;transform:translateY(25px);border-radius:16px;padding:15px}
-  .panel.show{transform:translateY(0)}
-  .poster{aspect-ratio:16/9}
-  .lang-menu{top:50px;right:10px}
-}
-@media(max-width:390px){
-  .nav-btn:nth-child(n+4){display:none}
-  .saga-meta{gap:12px}.saga-title{font-size:17px}.progress span{font-size:11px}.track{width:55px}
-  .item{grid-template-columns:1fr 42px 1fr;min-height:88px}.left .card{padding-right:9px}.right .card{padding-left:9px}
-  .name{font-size:9.5px}.year{font-size:8.5px}
-  .branch{width:calc(50% - 21px)}.item.left .branch{right:calc(50% + 21px)}.item.right .branch{left:calc(50% + 21px)}
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f8f8f6">
+  <meta name="description" content="MCU — your path to Doomsday. A minimal offline-first watch tracker.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="MCU">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./assets/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="./assets/icon-192.png">
+  <title>MCU — Your path to Doomsday</title>
+  <style>
+    :root{
+      --bg:#f8f8f6;--surface:#fff;--ink:#151515;--muted:#737373;
+      --line:#deded9;--soft:#eeeeea;--shadow:0 18px 50px rgba(0,0,0,.07);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+    button,input{font:inherit}
+    button{color:inherit}
+    .app{min-height:100vh;display:grid;grid-template-columns:92px 1fr}
+    .rail{border-right:1px solid var(--line);padding:24px 14px;display:flex;flex-direction:column;align-items:center;position:sticky;top:0;height:100vh}
+    .brand{font-weight:850;letter-spacing:-.08em;font-size:22px;margin-bottom:44px}
+    .nav{display:flex;flex-direction:column;gap:8px;width:100%}
+    .nav button{border:0;background:transparent;border-radius:12px;padding:12px 8px;cursor:pointer;font-size:11px;color:var(--muted);display:grid;gap:5px;place-items:center}
+    .nav button.active,.nav button:hover{background:#ededeb;color:var(--ink)}
+    .nav .ico{font-size:18px;line-height:1}
+    .spacer{flex:1}
+    main{min-width:0}
+    .top{height:78px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(22px,4vw,60px);position:sticky;top:0;background:rgba(248,248,246,.92);backdrop-filter:blur(16px);z-index:10}
+    .eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700}
+    .top-title{font-size:13px;color:var(--muted)}
+    .top-actions{display:flex;gap:8px}
+    .icon-btn{width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer}
+    .content{max-width:1320px;margin:0 auto;padding:54px clamp(22px,4vw,60px) 80px}
+    .hero{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:end;margin-bottom:68px}
+    h1{font-size:clamp(48px,7vw,92px);line-height:.88;letter-spacing:-.075em;margin:10px 0 20px;max-width:720px}
+    .hero-copy{color:var(--muted);max-width:500px;font-size:15px;line-height:1.6}
+    .progress-box{min-width:270px;border-left:1px solid var(--line);padding-left:28px}
+    .progress-numbers{display:flex;align-items:baseline;gap:16px}
+    .progress-numbers strong{font-size:34px;letter-spacing:-.05em}
+    .progress-numbers span{color:var(--muted);font-size:13px}
+    .bar{height:5px;background:#e1e1dd;border-radius:10px;overflow:hidden;margin:18px 0 9px}
+    .bar i{display:block;height:100%;background:#151515;border-radius:10px;width:0;transition:width .5s ease}
+    .small{font-size:12px;color:var(--muted)}
+    .section-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:18px}
+    h2{font-size:13px;text-transform:uppercase;letter-spacing:.16em;margin:0}
+    .timeline-wrap{overflow-x:auto;padding-bottom:18px}
+    .timeline{display:grid;grid-template-columns:repeat(12,minmax(120px,1fr));min-width:1120px;position:relative;padding-top:20px}
+    .timeline:before{content:"";height:1px;background:#bdbdb8;position:absolute;left:0;right:0;top:34px}
+    .node{position:relative;z-index:1}
+    .dot{width:30px;height:30px;border:1px solid #999;background:var(--bg);border-radius:50%;display:grid;place-items:center;font-size:10px;margin-bottom:13px}
+    .node.watched .dot{background:#151515;color:#fff;border-color:#151515}
+    .node.current .dot{width:36px;height:36px;margin-top:-3px;border:0;background:#151515;color:#fff;font-weight:800;box-shadow:0 0 0 5px var(--bg),0 0 0 6px #151515}
+    .node-title{font-size:12px;font-weight:650;line-height:1.25;max-width:112px}
+    .node-year{font-size:11px;color:var(--muted);margin-top:5px}
+    .current-card{margin-top:36px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:26px;display:grid;grid-template-columns:70px 1fr auto 1fr;gap:24px;align-items:center;box-shadow:var(--shadow)}
+    .big-num{font-size:58px;color:#b8b8b4;letter-spacing:-.08em}
+    .card-title{font-size:24px;font-weight:750;letter-spacing:-.04em}
+    .meta{font-size:12px;color:var(--muted);margin-top:5px}
+    .desc{font-size:12px;color:var(--muted);line-height:1.5;margin-top:9px;max-width:460px}
+    .primary{border:0;background:#171717;color:#fff;border-radius:999px;padding:12px 20px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap}
+    .primary:hover{background:#303030}
+    .next{border-left:1px solid var(--line);padding-left:24px}
+    .next .eyebrow{margin-bottom:9px}
+    .next-title{font-weight:700;font-size:14px}
+    .views{display:none}
+    .movie-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .movie-row{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;cursor:pointer}
+    .movie-row:hover{border-color:#aaa}
+    .movie-no{font-size:15px;color:#aaa;letter-spacing:-.04em}
+    .movie-name{font-weight:650;font-size:13px;line-height:1.25}
+    .movie-meta{font-size:11px;color:var(--muted);margin-top:4px}
+    .check{width:25px;height:25px;border:1px solid #aaa;border-radius:50%;display:grid;place-items:center;font-size:13px}
+    .movie-row.watched .check{background:#171717;border-color:#171717;color:#fff}
+    .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+    .filter{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 12px;font-size:11px;cursor:pointer}
+    .filter.active{background:#171717;color:#fff;border-color:#171717}
+    .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+    .stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px}
+    .stat strong{font-size:34px;letter-spacing:-.06em}.stat span{display:block;color:var(--muted);font-size:11px;margin-top:5px}
+    .phase-list{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px}
+    .phase{display:grid;grid-template-columns:70px 60px 1fr 40px;align-items:center;gap:15px;padding:14px 0;border-bottom:1px solid var(--soft)}
+    .phase:last-child{border:0}.phase-name{font-size:12px;font-weight:700}.phase-count,.phase-pct{font-size:11px;color:var(--muted)}
+    .phase-pct{text-align:right}.phase .bar{margin:0;height:4px}
+    .empty{padding:45px;text-align:center;color:var(--muted);border:1px dashed #cfcfca;border-radius:16px}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.24);display:none;align-items:flex-end;justify-content:center;z-index:50;padding:18px}
+    .modal.open{display:flex}.sheet{width:min(620px,100%);background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 25px 80px rgba(0,0,0,.18)}
+    .sheet-head{display:flex;justify-content:space-between;gap:20px}.sheet h3{font-size:34px;line-height:1;margin:7px 0;letter-spacing:-.06em}.sheet-close{border:1px solid var(--line);background:transparent;width:34px;height:34px;border-radius:50%;cursor:pointer}
+    .sheet .desc{max-width:none;font-size:14px;margin:18px 0 24px}
+    .sheet-actions{display:flex;gap:8px}.secondary{border:1px solid var(--line);background:transparent;border-radius:999px;padding:11px 17px;cursor:pointer;font-size:12px}
+    .search{display:flex;gap:8px;margin-bottom:18px}.search input{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;outline:none}
+    footer{margin-top:60px;color:#999;font-size:11px;display:flex;justify-content:space-between}
+    @media(max-width:1000px){.movie-grid{grid-template-columns:repeat(2,1fr)}.current-card{grid-template-columns:60px 1fr auto}.next{grid-column:2/-1;border-left:0;border-top:1px solid var(--line);padding:18px 0 0}.hero{grid-template-columns:1fr}.progress-box{border-left:0;border-top:1px solid var(--line);padding:20px 0 0}.progress-box{max-width:400px}}
+    @media(max-width:720px){
+      .app{display:block}.rail{height:64px;position:fixed;z-index:30;bottom:0;top:auto;left:0;right:0;border-right:0;border-top:1px solid var(--line);background:rgba(248,248,246,.94);backdrop-filter:blur(16px);padding:6px 12px;display:block}.brand{display:none}.nav{flex-direction:row;justify-content:space-around;gap:2px}.nav button{padding:6px 14px;font-size:9px}.nav .ico{font-size:16px}.nav button:last-child{display:none}.top{height:62px;padding:0 18px}.content{padding:36px 18px 100px}.hero{margin-bottom:46px}.hero-copy{font-size:13px}h1{font-size:54px}.current-card{grid-template-columns:1fr;padding:22px;gap:14px}.big-num{font-size:42px}.next{grid-column:auto}.movie-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.stat:last-child{grid-column:1/-1}.phase{grid-template-columns:55px 45px 1fr 32px}.phase-list{padding:15px}.timeline{grid-template-columns:repeat(12,minmax(105px,1fr));min-width:1260px}}
+  </style>
 </head>
 <body>
-<div id="app">
+<div class="app">
   <aside class="rail">
     <div class="brand">MCU</div>
-    <nav class="nav" aria-label="Navigation">
-      <button class="nav-btn active" title="Timeline" aria-label="Timeline">
-        <svg viewBox="0 0 24 24"><path d="M4 5.5h16M4 12h16M4 18.5h16"/><circle cx="8" cy="5.5" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="11" cy="18.5" r="1.5"/></svg>
-      </button>
-      <button class="nav-btn" title="Library" aria-label="Library">
-        <svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
-      </button>
-      <button class="nav-btn" title="Saved" aria-label="Saved">
-        <svg viewBox="0 0 24 24"><path d="M6 5.5A2.5 2.5 0 0 1 8.5 3h7A2.5 2.5 0 0 1 18 5.5V21l-6-3.6L6 21z"/></svg>
-      </button>
-      <button class="nav-btn" title="Statistics" aria-label="Statistics">
-        <svg viewBox="0 0 24 24"><path d="M5 19V9M12 19V5M19 19v-7"/></svg>
-      </button>
-      <button class="nav-btn" id="settings-btn" title="Settings" aria-label="Settings">
-        <svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.2 13.4 1.1.9-1.8 3.1-1.4-.6a7.9 7.9 0 0 1-1.8 1l-.2 1.5h-3.6l-.2-1.5a7.9 7.9 0 0 1-1.8-1l-1.4.6-1.8-3.1 1.1-.9a7.5 7.5 0 0 1 0-2.8l-1.1-.9 1.8-3.1 1.4.6a7.9 7.9 0 0 1 1.8-1l.2-1.5h3.6l.2 1.5a7.9 7.9 0 0 1 1.8 1l1.4-.6 1.8 3.1-1.1.9a7.5 7.5 0 0 1 0 2.8Z"/></svg>
-      </button>
+    <nav class="nav">
+      <button data-view="journey" class="active"><span class="ico">⌁</span>Journey</button>
+      <button data-view="movies"><span class="ico">⊞</span>Movies</button>
+      <button data-view="stats"><span class="ico">⌁</span>Stats</button>
+      <div class="spacer"></div>
+      <button id="resetBtn"><span class="ico">↺</span>Reset</button>
     </nav>
   </aside>
 
-  <main class="main">
+  <main>
     <header class="top">
-      <div class="saga-meta">
-        <div>
-          <div class="eyebrow" id="saga-label">SAGA</div>
-          <div class="saga-title">Infinity Saga</div>
-        </div>
-        <div class="progress">
-          <span id="progress">0 / 38</span>
-          <div class="track"><div class="fill" id="fill"></div></div>
-        </div>
-      </div>
-      <div class="top-actions">
-        <button class="round-btn" id="lang-btn" aria-label="Language">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.7 5.5 3.7 9s-1.2 6.5-3.7 9c-2.5-2.5-3.7-5.5-3.7-9S9.5 5.5 12 3Z"/></svg>
-        </button>
-        <button class="round-btn" id="theme-btn" aria-label="Theme">
-          <svg viewBox="0 0 24 24" id="theme-icon"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-        </button>
-      </div>
+      <div><div class="eyebrow">Marvel Cinematic Universe</div><div class="top-title">Your path to Doomsday.</div></div>
+      <div class="top-actions"><button class="icon-btn" id="searchBtn" aria-label="Search">⌕</button><button class="icon-btn" id="infoBtn" aria-label="About">···</button></div>
     </header>
 
-    <section class="content">
-      <div class="content-inner">
-        <div class="next"><span id="next-label">Next up:</span><b id="next-title">Iron Man</b></div>
-        <div class="timeline" id="timeline"></div>
-        <div class="legend">
-          <span><i class="sample-line"></i> Main Path</span>
-          <span><i class="sample-dash"></i> Optional / Branch</span>
-          <span><i class="sample-node"></i> Not Watched</span>
-          <span><i class="sample-current"></i> Current</span>
+    <div class="content">
+      <section id="journeyView" class="views" style="display:block">
+        <div class="hero">
+          <div>
+            <div class="eyebrow">Your journey</div>
+            <h1>The path to<br>Doomsday</h1>
+            <div class="hero-copy">A quiet little tracker for the MCU journey. Watch in order, mark each film complete, and let the next step find you.</div>
+          </div>
+          <div class="progress-box">
+            <div class="eyebrow">Progress</div>
+            <div class="progress-numbers"><strong id="watchedCount">0 / 38</strong><span>movies</span><strong id="percent">0%</strong></div>
+            <div class="bar"><i id="progressBar"></i></div>
+            <div class="small" id="remaining">38 movies remain before Doomsday.</div>
+          </div>
         </div>
-      </div>
-    </section>
+
+        <div class="section-head"><h2>Journey</h2><div class="small" id="journeyHint">Start with Iron Man.</div></div>
+        <div class="timeline-wrap"><div class="timeline" id="timeline"></div></div>
+        <div id="currentCard"></div>
+      </section>
+
+      <section id="moviesView" class="views">
+        <div class="section-head"><div><div class="eyebrow">Library</div><h1 style="font-size:52px;margin:8px 0 0">Movies</h1></div></div>
+        <div class="search"><input id="movieSearch" placeholder="Search movies…" autocomplete="off"></div>
+        <div class="filters" id="filters"></div>
+        <div class="movie-grid" id="movieGrid"></div>
+      </section>
+
+      <section id="statsView" class="views">
+        <div class="section-head"><div><div class="eyebrow">Overview</div><h1 style="font-size:52px;margin:8px 0 0">Stats</h1></div></div>
+        <div class="stats-grid">
+          <div class="stat"><strong id="sWatched">0</strong><span>watched</span></div>
+          <div class="stat"><strong id="sRemaining">38</strong><span>remaining</span></div>
+          <div class="stat"><strong id="sPercent">0%</strong><span>complete</span></div>
+        </div>
+        <div class="phase-list" id="phaseList"></div>
+      </section>
+
+      <footer><span>MCU / 38</span><span>Progress is stored on this device.</span></footer>
+    </div>
   </main>
 </div>
 
-<div class="overlay" id="overlay"></div>
-<div class="lang-menu" id="lang-menu">
-  <button data-lang="en">English</button>
-  <button data-lang="de">Deutsch</button>
-  <button data-lang="ru">Русский</button>
-</div>
-
-<aside class="panel" id="panel" aria-label="Film details">
-  <button class="close" id="close" aria-label="Close">
-    <svg viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"/></svg>
-  </button>
-  <div class="p-num" id="p-num">#1</div>
-  <h2 class="p-title" id="p-title">Iron Man</h2>
-  <div class="p-meta" id="p-meta">2008 · 2h 6m</div>
-  <img class="poster" id="poster" alt="">
-  <button class="watch" id="watch"></button>
-  <div class="sec" id="rating-label">Your Rating</div>
-  <div class="stars" id="stars"></div>
-  <div class="sec" id="notes-label">Notes</div>
-  <textarea class="notes" id="notes"></textarea>
-  <button class="save" id="save-note">Save</button>
-  <div id="date-block" style="display:none"><div class="sec" id="date-label">Watched on</div><div class="date" id="date"></div></div>
-</aside>
+<div class="modal" id="modal"><div class="sheet">
+  <div class="sheet-head"><div><div class="eyebrow" id="modalNo">01</div><h3 id="modalTitle">Iron Man</h3><div class="meta" id="modalMeta">2008</div></div><button class="sheet-close" id="closeModal">×</button></div>
+  <div class="desc" id="modalDesc"></div>
+  <div class="sheet-actions"><button class="primary" id="modalToggle">Mark as watched</button><button class="secondary" id="modalPrev">Previous</button><button class="secondary" id="modalNext">Next</button></div>
+</div></div>
 
 <script>
-const FILMS=[
-{id:1,title:"Iron Man",year:2008,rt:"2h 6m",poster:"https://image.tmdb.org/t/p/w500/78lPtwv72eTNqFW9COBP8i1t0PY.jpg"},
-{id:2,title:"The Incredible Hulk",year:2008,rt:"1h 52m",poster:"https://image.tmdb.org/t/p/w500/gKzYx79y0AQTL4UAk1cBQJ3nvrm.jpg"},
-{id:3,title:"Iron Man 2",year:2010,rt:"2h 4m",poster:"https://image.tmdb.org/t/p/w500/6WBeq4tQ8L0L8oyR3gEMOHbTuaR.jpg"},
-{id:4,title:"Thor",year:2011,rt:"1h 55m",poster:"https://image.tmdb.org/t/p/w500/prSfAi1xXrhoom3538CRncZIXsX.jpg"},
-{id:5,title:"Captain America: The First Avenger",year:2011,rt:"2h 4m",poster:"https://image.tmdb.org/t/p/w500/vSNxB3B7uRnSdSPvqFNLqOmzjSl.jpg"},
-{id:6,title:"The Avengers",year:2012,rt:"2h 23m",poster:"https://image.tmdb.org/t/p/w500/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg"},
-{id:7,title:"Iron Man 3",year:2013,rt:"2h 10m",poster:"https://image.tmdb.org/t/p/w500/qhPtAc1TKbMPqNvcdXSOn9Bn7hZ.jpg"},
-{id:8,title:"Thor: The Dark World",year:2013,rt:"1h 52m",poster:"https://image.tmdb.org/t/p/w500/bnX5PpBFRBxhJhRInGRoVbQlBHL.jpg"},
-{id:9,title:"Captain America: The Winter Soldier",year:2014,rt:"2h 16m",poster:"https://image.tmdb.org/t/p/w500/5TQ6YDmymBpnF005OyoB7ohZps9.jpg"},
-{id:10,title:"Guardians of the Galaxy",year:2014,rt:"2h 1m",poster:"https://image.tmdb.org/t/p/w500/r7vmZjiyZw9rpJMQJdXpjgiCOk9.jpg"},
-{id:11,title:"Avengers: Age of Ultron",year:2015,rt:"2h 21m",poster:"https://image.tmdb.org/t/p/w500/4ssDuvEDkSArWEdyBl2X5EHvYKU.jpg"},
-{id:12,title:"Ant-Man",year:2015,rt:"1h 57m",poster:"https://image.tmdb.org/t/p/w500/MgBQCQKGNjDqSoNJMXhTOZKoQG.jpg"},
-{id:13,title:"Captain America: Civil War",year:2016,rt:"2h 27m",poster:"https://image.tmdb.org/t/p/w500/rAGiXaUfPzY7CDd3MKvOvJ4FbYA.jpg"},
-{id:14,title:"Doctor Strange",year:2016,rt:"1h 55m",poster:"https://image.tmdb.org/t/p/w500/uGnMhsSBNPCJDt58IUFnm8SXPyL.jpg"},
-{id:15,title:"Guardians of the Galaxy Vol. 2",year:2017,rt:"2h 16m",poster:"https://image.tmdb.org/t/p/w500/y4MBh0EjBlMuOzv9axM4B61I8bA.jpg"},
-{id:16,title:"Spider-Man: Homecoming",year:2017,rt:"2h 13m",poster:"https://image.tmdb.org/t/p/w500/c24sv2weTHPsmDa7jEMN0m2P3RT.jpg"},
-{id:17,title:"Thor: Ragnarok",year:2017,rt:"2h 10m",poster:"https://image.tmdb.org/t/p/w500/rzRwTcFvttcN1ZpX2xv4j3tSdJu.jpg"},
-{id:18,title:"Black Panther",year:2018,rt:"2h 14m",poster:"https://image.tmdb.org/t/p/w500/uxzzxijgPIY7slzFvMotPv8wjKA.jpg"},
-{id:19,title:"Avengers: Infinity War",year:2018,rt:"2h 29m",poster:"https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg"},
-{id:20,title:"Ant-Man and the Wasp",year:2018,rt:"1h 58m",poster:"https://image.tmdb.org/t/p/w500/SZ4TMcwsGuGzgijKHyFtDGgioS.jpg"},
-{id:21,title:"Captain Marvel",year:2019,rt:"2h 4m",poster:"https://image.tmdb.org/t/p/w500/AtsgWhDnHTq68L0lLsUrCnM7TjG.jpg"},
-{id:22,title:"Avengers: Endgame",year:2019,rt:"3h 1m",poster:"https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg"},
-{id:23,title:"Spider-Man: Far From Home",year:2019,rt:"2h 9m",poster:"https://image.tmdb.org/t/p/w500/rjbNpRMoVvqHmhmksbokcyHFoeZ.jpg"},
-{id:24,title:"Black Widow",year:2021,rt:"2h 14m",poster:"https://image.tmdb.org/t/p/w500/qAZ0pzat24kLdO3o8ejmbLxyOac.jpg"},
-{id:25,title:"Shang-Chi and the Legend of the Ten Rings",year:2021,rt:"2h 12m",poster:"https://image.tmdb.org/t/p/w500/1BIoJGKbXjdFDAqUEiA2VHqkK1Z.jpg"},
-{id:26,title:"Eternals",year:2021,rt:"2h 37m",poster:"https://image.tmdb.org/t/p/w500/6AdXwFQBoKfMQrCXKe2MhEELECe.jpg"},
-{id:27,title:"Spider-Man: No Way Home",year:2021,rt:"2h 28m",poster:"https://image.tmdb.org/t/p/w500/uJYYizSuA9Y3DCs0qS4qWvHfZg4.jpg"},
-{id:28,title:"Doctor Strange in the Multiverse of Madness",year:2022,rt:"2h 6m",poster:"https://image.tmdb.org/t/p/w500/9Gtg2DzBhmYamXBS1hKAhiwbBKS.jpg"},
-{id:29,title:"Thor: Love and Thunder",year:2022,rt:"1h 59m",poster:"https://image.tmdb.org/t/p/w500/pIkRyD18kl4FhoCNQuWxWu5cBLM.jpg"},
-{id:30,title:"Black Panther: Wakanda Forever",year:2022,rt:"2h 41m",poster:"https://image.tmdb.org/t/p/w500/sv1xJUazXeYqALzczSZ3O6nkH75.jpg"},
-{id:31,title:"Ant-Man and the Wasp: Quantumania",year:2023,rt:"2h 5m",poster:"https://image.tmdb.org/t/p/w500/qnqGbB22YJ7dSs4o6M7exTpNxPz.jpg"},
-{id:32,title:"Guardians of the Galaxy Vol. 3",year:2023,rt:"2h 30m",poster:"https://image.tmdb.org/t/p/w500/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg"},
-{id:33,title:"The Marvels",year:2023,rt:"1h 45m",poster:"https://image.tmdb.org/t/p/w500/9GBhzXMFjgcZ3FdR9w3bqMMRmPs.jpg"},
-{id:34,title:"Deadpool & Wolverine",year:2024,rt:"2h 7m",poster:"https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg"},
-{id:35,title:"Captain America: Brave New World",year:2025,rt:"1h 58m",poster:"https://image.tmdb.org/t/p/w500/pzIddUEMWhWzfvLI3TwxUG2wGoi.jpg"},
-{id:36,title:"Thunderbolts*",year:2025,rt:"2h 7m",poster:"https://image.tmdb.org/t/p/w500/m9EtP1Yrzv6v7dMaC9mTfXpMJfd.jpg"},
-{id:37,title:"The Fantastic Four: First Steps",year:2025,rt:"TBA",poster:"https://image.tmdb.org/t/p/w500/9HWRmBFAMLFNVRf4AlHxpSp5fEb.jpg"},
-{id:38,title:"Avengers: Doomsday",year:2026,rt:"TBA",poster:"https://image.tmdb.org/t/p/w500/placeholder.jpg"}
+const movies = [
+  ["Iron Man",2008],["The Incredible Hulk",2008],["Iron Man 2",2010],["Thor",2011],
+  ["Captain America: The First Avenger",2011],["The Avengers",2012],["Iron Man 3",2013],
+  ["Thor: The Dark World",2013],["Captain America: The Winter Soldier",2014],
+  ["Guardians of the Galaxy",2014],["Avengers: Age of Ultron",2015],["Ant-Man",2015],
+  ["Captain America: Civil War",2016],["Doctor Strange",2016],["Guardians of the Galaxy Vol. 2",2017],
+  ["Spider-Man: Homecoming",2017],["Thor: Ragnarok",2017],["Black Panther",2018],
+  ["Avengers: Infinity War",2018],["Ant-Man and the Wasp",2018],["Captain Marvel",2019],
+  ["Avengers: Endgame",2019],["Spider-Man: Far From Home",2019],["Black Widow",2021],
+  ["Shang-Chi and the Legend of the Ten Rings",2021],["Eternals",2021],["Spider-Man: No Way Home",2021],
+  ["Doctor Strange in the Multiverse of Madness",2022],["Thor: Love and Thunder",2022],
+  ["Black Panther: Wakanda Forever",2022],["Ant-Man and the Wasp: Quantumania",2023],
+  ["Guardians of the Galaxy Vol. 3",2023],["The Marvels",2023],["Deadpool & Wolverine",2024],
+  ["Captain America: Brave New World",2025],["Thunderbolts*",2025],["The Fantastic Four: First Steps",2025],
+  ["Avengers: Doomsday",2026]
 ];
+const phases=[[1,6],[7,12],[13,23],[24,30],[31,36],[37,38]];
+let watched = JSON.parse(localStorage.getItem("mcu-watched") || "[]");
+let activePhase = 0, selected = null;
 
-const TR={
-en:{saga:"SAGA",next:"Next up:",rating:"Your Rating",notes:"Notes",save:"Save",date:"Watched on",mark:"Mark as watched",unmark:"Remove from watched",ph:"Write a note…",of:"of",done:"All watched!"},
-de:{saga:"SAGA",next:"Als Nächstes:",rating:"Deine Bewertung",notes:"Notizen",save:"Speichern",date:"Gesehen am",mark:"Als gesehen markieren",unmark:"Als ungesehen markieren",ph:"Notiz schreiben…",of:"von",done:"Alle gesehen!"},
-ru:{saga:"САГА",next:"Следующий:",rating:"Ваша оценка",notes:"Заметки",save:"Сохранить",date:"Просмотрено",mark:"Отметить просмотренным",unmark:"Убрать отметку",ph:"Написать заметку…",of:"из",done:"Все просмотрено!"}
-};
-let S={theme:"auto",lang:"en",watched:{}},activeId=null;
-function load(){try{const x=localStorage.getItem("mcu2");if(x)S={...S,...JSON.parse(x)}}catch(e){}}
-function save(){localStorage.setItem("mcu2",JSON.stringify(S))}
-function t(k){return (TR[S.lang]||TR.en)[k]||k}
-function dark(){return S.theme==="dark"||(S.theme==="auto"&&matchMedia("(prefers-color-scheme:dark)").matches)}
-function applyTheme(){
-  document.documentElement.toggleAttribute("data-theme",false);
-  if(S.theme!=="auto")document.documentElement.setAttribute("data-theme",S.theme);
-  const sun=`<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>`;
-  const moon=`<path d="M20 15.2A8.2 8.2 0 0 1 8.8 4a8.3 8.3 0 1 0 11.2 11.2Z"/>`;
-  document.getElementById("theme-icon").innerHTML=dark()?moon:sun;
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const save=()=>localStorage.setItem("mcu-watched",JSON.stringify(watched));
+const isWatched=i=>watched.includes(i);
+const firstUnwatched=()=>movies.findIndex((_,i)=>!isWatched(i));
+function progress(){
+  const n=watched.length,p=n/movies.length*100;
+  $("#watchedCount").textContent=`${n} / ${movies.length}`;
+  $("#percent").textContent=`${p.toFixed(p%1?1:0)}%`;
+  $("#progressBar").style.width=p+"%";
+  $("#remaining").textContent=n===movies.length?"Journey complete.":"${movies.length-n} movies remain before Doomsday.".replace("${movies.length-n}",movies.length-n);
+  $("#sWatched").textContent=n; $("#sRemaining").textContent=movies.length-n; $("#sPercent").textContent=`${p.toFixed(p%1?1:0)}%`;
 }
-function update(){
-  const c=Object.keys(S.watched).length,total=FILMS.length;
-  document.getElementById("progress").textContent=`${c} ${t("of")} ${total}`;
-  document.getElementById("fill").style.width=`${c/total*100}%`;
-  const next=FILMS.find(f=>!S.watched[f.id]);
-  document.getElementById("next-label").textContent=t("next");
-  document.getElementById("next-title").textContent=next?`${next.id}. ${next.title}`:t("done");
-  document.getElementById("saga-label").textContent=t("saga");
+function phaseOf(i){ return phases.findIndex(([a,b])=>i+1>=a&&i+1<=b)+1; }
+function renderTimeline(){
+  const start=Math.max(0,Math.min(movies.length-12,Math.max(0,firstUnwatched()-5)));
+  const items=movies.slice(start,start+12);
+  const current=firstUnwatched();
+  $("#timeline").innerHTML=items.map((m,k)=>{
+    const i=start+k, cls=`node ${isWatched(i)?"watched ":""} ${i===current?"current":""}`;
+    return `<div class="${cls}" data-i="${i}"><div class="dot">${i+1}</div><div class="node-title">${m[0]}</div><div class="node-year">${m[1]}</div></div>`;
+  }).join("");
+  $$("#timeline .node").forEach(n=>n.onclick=()=>openMovie(+n.dataset.i));
 }
-function build(){
-  const tl=document.getElementById("timeline");tl.innerHTML="";
-  FILMS.forEach((f,i)=>{
-    const w=S.watched[f.id], current=!w&&FILMS.find(x=>!S.watched[x.id])?.id===f.id;
-    const side=i%2===0?"left":"right";
-    const el=document.createElement("article");el.className=`item ${side}`;
-    el.innerHTML=`<div class="card"><div class="name">${f.title}</div><div class="year">${f.year}</div></div>
-      <div class="node-wrap"><button class="node ${w?"watched":current?"current":""}" aria-label="${f.title}">${f.id}</button></div>
-      <span class="branch"></span>`;
-    el.addEventListener("click",()=>open(f.id));tl.appendChild(el);
-  });
-  const end=document.createElement("div");end.className="end";end.innerHTML='<div class="node">…</div>';tl.appendChild(end);
+function renderCurrent(){
+  const i=firstUnwatched();
+  if(i<0){
+    $("#currentCard").innerHTML=`<div class="current-card"><div class="big-num">38</div><div><div class="eyebrow">Completed</div><div class="card-title">You made it to Doomsday.</div><div class="desc">All 38 films are marked watched on this device.</div></div><button class="primary" onclick="showView('stats')">View stats</button><div class="next"><div class="eyebrow">Universe complete</div><div class="next-title">Until the next chapter.</div></div></div>`;
+    $("#journeyHint").textContent="All films complete.";
+    return;
+  }
+  const [name,year]=movies[i], next=movies[i+1];
+  $("#journeyHint").textContent=i===0?"Start with Iron Man.":`${i} films complete.`;
+  $("#currentCard").innerHTML=`<div class="current-card">
+    <div class="big-num">${String(i+1).padStart(2,"0")}</div>
+    <div><div class="card-title">${name}</div><div class="meta">${year} · Phase ${phaseOf(i)}</div><div class="desc">This is your next step. Open the film for details, then mark it watched when you're done.</div></div>
+    <button class="primary" id="currentToggle">Mark as watched</button>
+    ${next?`<div class="next"><div class="eyebrow">Up next</div><div class="next-title">${next[0]}</div><div class="meta">${next[1]}</div></div>`:`<div class="next"><div class="eyebrow">Final film</div><div class="next-title">Avengers: Doomsday</div></div>`}
+  </div>`;
+  $("#currentToggle").onclick=()=>toggle(i);
 }
-function open(id){
-  activeId=id;render();document.getElementById("panel").classList.add("show");document.getElementById("overlay").classList.add("show");
+function renderMovies(){
+  const q=($("#movieSearch")?.value||"").toLowerCase().trim();
+  const list=movies.map((m,i)=>({m,i})).filter(x=>(activePhase===0||phaseOf(x.i)===activePhase)&&(!q||x.m[0].toLowerCase().includes(q)));
+  $("#movieGrid").innerHTML=list.length?list.map(({m,i})=>`<div class="movie-row ${isWatched(i)?"watched":""}" data-i="${i}">
+    <div class="movie-no">${String(i+1).padStart(2,"0")}</div><div><div class="movie-name">${m[0]}</div><div class="movie-meta">${m[1]} · Phase ${phaseOf(i)}</div></div><div class="check">${isWatched(i)?"✓":""}</div>
+  </div>`).join(""):`<div class="empty">No films found.</div>`;
+  $$("#movieGrid .movie-row").forEach(r=>r.onclick=()=>openMovie(+r.dataset.i));
 }
-function close(){document.getElementById("panel").classList.remove("show");document.getElementById("overlay").classList.remove("show");activeId=null}
-function render(){
-  const f=FILMS.find(x=>x.id===activeId),w=S.watched[activeId],is=!!w;
-  document.getElementById("p-num").textContent=`#${f.id}`;
-  document.getElementById("p-title").textContent=f.title;
-  document.getElementById("p-meta").textContent=`${f.year} · ${f.rt}`;
-  const p=document.getElementById("poster");p.src=f.poster;p.alt=f.title;
-  const b=document.getElementById("watch");b.textContent=is?t("unmark"):t("mark");b.className="watch"+(is?" off":"");
-  document.getElementById("rating-label").textContent=t("rating");
-  document.getElementById("notes-label").textContent=t("notes");
-  document.getElementById("notes").placeholder=t("ph");document.getElementById("notes").value=w?.note||"";
-  document.getElementById("save-note").textContent=t("save");
-  const db=document.getElementById("date-block");
-  if(is&&w.date){db.style.display="block";document.getElementById("date-label").textContent=t("date");document.getElementById("date").textContent=new Date(w.date).toLocaleDateString({en:"en-US",de:"de-DE",ru:"ru-RU"}[S.lang],{day:"numeric",month:"long",year:"numeric"})}else db.style.display="none";
-  const stars=document.getElementById("stars");stars.innerHTML="";
-  for(let i=1;i<=5;i++){const s=document.createElement("button");s.className="star"+(i<=(w?.rating||0)?" on":"");s.textContent="★";s.addEventListener("click",()=>rate(i));stars.appendChild(s)}
+function renderFilters(){
+  $("#filters").innerHTML=[["All",0],["Phase I",1],["Phase II",2],["Phase III",3],["Phase IV",4],["Phase V",5],["Phase VI",6]].map(([x,v])=>`<button class="filter ${activePhase===v?"active":""}" data-p="${v}">${x}</button>`).join("");
+  $$("#filters .filter").forEach(b=>b.onclick=()=>{activePhase=+b.dataset.p;renderFilters();renderMovies()});
 }
-function toggle(id){
-  if(S.watched[id])delete S.watched[id];else S.watched[id]={date:new Date().toISOString(),rating:0,note:""};
-  save();build();update();render();
+function renderStats(){
+  $("#phaseList").innerHTML=phases.map(([a,b],idx)=>{
+    const total=b-a+1, count=Array.from({length:total},(_,k)=>isWatched(a-1+k)).filter(Boolean).length, p=count/total*100;
+    return `<div class="phase"><div class="phase-name">Phase ${["I","II","III","IV","V","VI"][idx]}</div><div class="phase-count">${count} / ${total}</div><div class="bar"><i style="width:${p}%"></i></div><div class="phase-pct">${Math.round(p)}%</div></div>`;
+  }).join("");
 }
-function rate(n){
-  if(!S.watched[activeId])toggle(activeId);
-  const cur=S.watched[activeId].rating||0;S.watched[activeId].rating=cur===n?0:n;save();render();build();update()
+function render(){progress();renderTimeline();renderCurrent();renderFilters();renderMovies();renderStats();}
+function toggle(i){
+  if(isWatched(i)) watched=watched.filter(x=>x!==i); else watched=[...watched,i].sort((a,b)=>a-b);
+  save(); render(); closeModal();
 }
-document.getElementById("watch").onclick=()=>activeId&&toggle(activeId);
-document.getElementById("save-note").onclick=()=>{
-  if(!activeId)return;
-  if(!S.watched[activeId])toggle(activeId);
-  S.watched[activeId].note=document.getElementById("notes").value.trim();save();build();update();
-  const b=document.getElementById("save-note");const old=b.textContent;b.textContent="✓";setTimeout(()=>b.textContent=old,900);
-};
-document.getElementById("close").onclick=close;document.getElementById("overlay").onclick=close;
-document.getElementById("theme-btn").onclick=()=>{S.theme={auto:"dark",dark:"light",light:"auto"}[S.theme];save();applyTheme()};
-document.getElementById("lang-btn").onclick=e=>{e.stopPropagation();document.getElementById("lang-menu").classList.toggle("show")};
-document.querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>{S.lang=b.dataset.lang;save();document.getElementById("lang-menu").classList.remove("show");update();if(activeId)render()});
-document.addEventListener("click",e=>{if(!e.target.closest("#lang-menu")&&!e.target.closest("#lang-btn"))document.getElementById("lang-menu").classList.remove("show")});
-matchMedia("(prefers-color-scheme:dark)").addEventListener("change",()=>{if(S.theme==="auto")applyTheme()});
-load();applyTheme();build();update();
+function openMovie(i){
+  selected=i; const [name,year]=movies[i];
+  $("#modalNo").textContent=String(i+1).padStart(2,"0");
+  $("#modalTitle").textContent=name; $("#modalMeta").textContent=`${year} · Phase ${phaseOf(i)}`;
+  $("#modalDesc").textContent=i===movies.length-1?"The current destination of this 38-film journey.":"Your MCU journey, one film at a time. Mark it watched when you're done.";
+  $("#modalToggle").textContent=isWatched(i)?"Mark as unwatched":"Mark as watched";
+  $("#modal").classList.add("open");
+}
+function closeModal(){$("#modal").classList.remove("open");selected=null}
+function showView(v){
+  $$(".views").forEach(x=>x.style.display="none"); $("#"+v+"View").style.display="block";
+  $$(".nav button[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===v));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+$$(".nav button[data-view]").forEach(b=>b.onclick=()=>showView(b.dataset.view));
+$("#movieSearch").addEventListener("input",renderMovies);
+$("#closeModal").onclick=closeModal; $("#modal").onclick=e=>{if(e.target.id==="modal")closeModal()};
+$("#modalToggle").onclick=()=>toggle(selected);
+$("#modalPrev").onclick=()=>selected>0&&openMovie(selected-1);
+$("#modalNext").onclick=()=>selected<movies.length-1&&openMovie(selected+1);
+$("#searchBtn").onclick=()=>{showView("movies");setTimeout(()=>$("#movieSearch").focus(),100)};
+$("#infoBtn").onclick=()=>alert("MCU / 38\n\nOffline-first watch tracker.\nYour progress stays in this browser.");
+$("#resetBtn").onclick=()=>{if(confirm("Reset all watched films on this device?")){watched=[];save();render();}};
+render();
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));
+}
 </script>
 </body>
 </html>
