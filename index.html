@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MCU" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
+  <title>MCU Tracker</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- HEADER -->
+    <header id="main-header">
+      <span class="logo">MCU</span>
+      <div class="header-right">
+        <button id="lang-btn" class="icon-btn" aria-label="Language"></button>
+        <button id="theme-btn" class="icon-btn" aria-label="Toggle theme"></button>
+      </div>
+    </header>
+
+    <!-- SAGA INFO BAR -->
+    <div id="saga-bar">
+      <div class="saga-label" data-i18n="saga">SAGA</div>
+      <div class="saga-row">
+        <h1 class="saga-title">MCU</h1>
+        <div class="saga-progress-wrap">
+          <span id="progress-text">0 / 38</span>
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Next to watch -->
+      <div id="next-wrap">
+        <span class="next-label" data-i18n="next_up">Next up:</span>
+        <span id="next-title">—</span>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <main id="timeline-container">
+      <div id="timeline"></div>
+    </main>
+
+    <!-- DETAIL PANEL -->
+    <div id="panel-overlay" class="hidden"></div>
+    <aside id="detail-panel" class="hidden">
+      <button id="panel-close">✕</button>
+      <div id="panel-num"></div>
+      <h2 id="panel-title"></h2>
+      <div id="panel-meta"></div>
+      <img id="panel-poster" src="" alt="" />
+
+      <button id="btn-watched" class="btn-primary">
+        <span id="btn-watched-text"></span>
+      </button>
+
+      <!-- Rating -->
+      <div id="rating-wrap">
+        <div class="section-label" data-i18n="your_rating">Your Rating</div>
+        <div id="stars"></div>
+      </div>
+
+      <!-- Notes -->
+      <div id="notes-wrap">
+        <div class="section-label" data-i18n="notes">Notes</div>
+        <textarea id="notes-input" rows="3" data-i18n-placeholder="write_note"></textarea>
+        <button id="btn-save-note" class="btn-secondary" data-i18n="save">Save</button>
+      </div>
+
+      <!-- Watch date -->
+      <div id="date-wrap" class="hidden">
+        <div class="section-label" data-i18n="watched_on">Watched on</div>
+        <div id="watch-date-display"></div>
+      </div>
+    </aside>
+
+    <!-- LANG PICKER -->
+    <div id="lang-picker" class="hidden">
+      <button data-lang="en">🇬🇧 English</button>
+      <button data-lang="de">🇩🇪 Deutsch</button>
+      <button data-lang="ru">🇷🇺 Русский</button>
+    </div>
+
+  </div>
+  <script src="js/app.js"></script>
+</body>
+</html>
