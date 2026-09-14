@@ -2,20 +2,20 @@
   "name": "MCU Tracker",
   "short_name": "MCU",
   "description": "Track your Marvel Cinematic Universe watch history",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
   "orientation": "any",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "https://ui-avatars.com/api/?name=MCU&size=192&background=000000&color=ffffff&bold=true&font-size=0.4",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "https://ui-avatars.com/api/?name=MCU&size=512&background=000000&color=ffffff&bold=true&font-size=0.4",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
